@@ -38,4 +38,8 @@ ENV NODE_ENV=production
 # Install only production dependencies
 RUN npm ci --ignore-scripts --omit-dev
 
+# Only used when TRANSPORT=http (see src/http-server.ts); irrelevant/no-op
+# for the default stdio transport.
+EXPOSE 3000
+
 ENTRYPOINT ["node", "dist/index.js"]

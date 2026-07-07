@@ -1,5 +1,5 @@
 import { Server } from '@modelcontextprotocol/sdk/server/index.js'
-import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
+import type { Transport } from '@modelcontextprotocol/sdk/shared/transport.js'
 import {
   CallToolRequestSchema,
   GetPromptRequestSchema,
@@ -138,7 +138,7 @@ export class MCPServer {
     this.promptRegistry.register(prompt)
   }
 
-  async connect(transport: StdioServerTransport) {
+  async connect(transport: Transport) {
     await this.server.connect(transport)
   }
 }

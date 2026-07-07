@@ -1,38 +1,33 @@
+const transportMode = process.env.TRANSPORT === 'http' ? 'http' : 'stdio'
 const enableDebugLogs = process.env.DEBUG_LOGS === 'true'
 
-if (!enableDebugLogs) {
+// stdio reserves stdout for protocol frames, so console.log/info/warn are
+// silenced there unless debugging. The http transport doesn't share stdout
+// with the protocol, so it keeps normal logging.
+if (transportMode === 'stdio' && !enableDebugLogs) {
   console.log = () => {}
   console.info = () => {}
   console.warn = () => {}
 }
 
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
-import { MCPServer } from './server.js'
+import { buildServer } from './build-server.js'
+import { runHttp } from './http-server.js'
 
-import { FetchAggregateDataTool } from './tools/fetch-aggregate-data.tool.js'
-import { FetchDatasetGeographyTool } from './tools/fetch-dataset-geography.tool.js'
-import { ListDatasetsTool } from './tools/list-datasets.tool.js'
-import { ResolveGeographyFipsTool } from './tools/resolve-geography-fips.tool.js'
-import { SearchDataTablesTool } from './tools/search-data-tables.tool.js'
-
-import { PopulationPrompt } from './prompts/population.prompt.js'
-
-// MCP Server Setup
-async function main() {
-  const mcpServer = new MCPServer('census-api', '0.1.0')
-
-  // Register prompts
-  mcpServer.registerPrompt(new PopulationPrompt())
-
-  // Register tools
-  mcpServer.registerTool(new FetchAggregateDataTool())
-  mcpServer.registerTool(new FetchDatasetGeographyTool())
-  mcpServer.registerTool(new ListDatasetsTool())
-  mcpServer.registerTool(new ResolveGeographyFipsTool())
-  mcpServer.registerTool(new SearchDataTablesTool())
-
+// MCP Server Setup — stdio (default, matches upstream) for local clients
+// like Claude Desktop/Code; TRANSPORT=http for a remote connector (see
+// http-server.ts for why upstream's stdio-only setup can't serve that role).
+async function runStdio() {
+  const mcpServer = buildServer()
   const transport = new StdioServerTransport()
   await mcpServer.connect(transport)
 }
 
-main().catch(console.error)
+if (transportMode === 'http') {
+  runHttp().catch((error: unknown) => {
+    console.error(error)
+    process.exit(1)
+  })
+} else {
+  runStdio().catch(console.error)
+}

@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import 'dotenv/config'
+import { pathToFileURL } from 'node:url'
 
 import { DATABASE_URL } from '../../helpers/database.helper.js'
 import {
@@ -164,8 +165,11 @@ export async function main(runSeedsFunction = runSeeds): Promise<void> {
   }
 }
 
-// ES module equivalent of "if (require.main === module)"
-if (import.meta.url === `file://${process.argv[1]}`) {
+// ES module equivalent of "if (require.main === module)". Compares via
+// pathToFileURL rather than a raw `file://${argv[1]}` template — the raw
+// form silently mismatches (and never runs main()) whenever the script path
+// contains characters import.meta.url percent-encodes, e.g. spaces.
+if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {
   main()
 }
 

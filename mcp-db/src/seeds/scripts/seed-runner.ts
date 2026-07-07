@@ -191,7 +191,14 @@ export class SeedRunner {
   private async performFetch(url: string, retryCount = 0): Promise<any> {
     const urlObj = new URL(url)
 
-    console.log(`Making API request to: ${urlObj.toString()}`)
+    // api.census.gov requires a key on most endpoints (e.g. geoinfo). A
+    // missing key isn't rejected with an error status — it comes back as
+    // HTTP 200 with an HTML page, which then fails JSON parsing below.
+    if (!urlObj.searchParams.has('key') && process.env.CENSUS_API_KEY) {
+      urlObj.searchParams.set('key', process.env.CENSUS_API_KEY)
+    }
+
+    console.log(`Making API request to: ${url}`)
 
     try {
       const response = await fetch(urlObj.toString())
