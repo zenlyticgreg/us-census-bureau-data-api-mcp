@@ -7,7 +7,7 @@ COPY package*.json ./
 COPY tsconfig.docker.json ./tsconfig.json
 
 # Install all dependencies (including dev for building)
-RUN --mount=type=cache,target=/root/.npm npm ci --ignore-scripts
+RUN --mount=type=cache,id=mcp-server-npm-cache,target=/root/.npm npm ci --ignore-scripts
 
 COPY src/ ./src/
 
