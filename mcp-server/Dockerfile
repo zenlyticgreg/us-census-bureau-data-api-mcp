@@ -2,14 +2,18 @@ FROM node:22.12-alpine AS builder
 
 WORKDIR /app
 
+# Railway's Dockerfile builder keeps the build context at the repo root for
+# a nested dockerfilePath (see railway.json), so these paths are relative
+# to the repo root rather than this file's own directory.
+
 # Copy package files
-COPY package*.json ./
-COPY tsconfig.docker.json ./tsconfig.json
+COPY mcp-server/package*.json ./
+COPY mcp-server/tsconfig.docker.json ./tsconfig.json
 
 # Install all dependencies (including dev for building)
 RUN npm ci --ignore-scripts
 
-COPY src/ ./src/
+COPY mcp-server/src/ ./src/
 
 #Check Source Files
 RUN echo "=== Source files ===" && find . -name "*.ts" -type f
