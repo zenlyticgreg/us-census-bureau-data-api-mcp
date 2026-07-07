@@ -1,0 +1,14 @@
+# One-off Railway service: runs migrations + seed against Postgres over
+# Railway's internal private network (reliable, low-latency), then exits.
+# Kept separate from Dockerfile (used by local `docker compose`, whose
+# build context is ./mcp-db) because Railway's builder keeps the build
+# context at the repo root for a nested dockerfilePath, so these paths
+# are repo-root-relative. tsx/typescript/node-pg-migrate are regular
+# dependencies here (not dev), so a single stage is enough.
+FROM node:20-slim
+WORKDIR /app
+COPY mcp-db/package*.json ./
+RUN npm ci --silent
+COPY mcp-db/. .
+RUN npm run build
+CMD ["sh", "-c", "npm run migrate:up && npm run seed:prod"]
